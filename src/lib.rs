@@ -21,6 +21,38 @@ pub struct Range {
     len: usize,
 }
 impl Range {
+    /// Create a new range from min to max exclusive
+    pub fn new_from_min_max_exclusive(min: usize, max: usize) -> Self {
+        Self {
+            start: min,
+            len: max - min + 1,
+        }
+    }
+    // read:  |------|
+    // write:    |--------|
+    // We need to turn this into:
+    // read:  |--|
+    // write:    |--------|
+    // So that the ranges do not overlap.
+    pub fn make_non_overlapping(read_range: Range, write_range: Range) -> (Self, Self) {
+        assert!(read_range.start <= write_range.start);
+        if read_range.start + read_range.len <= write_range.start {
+            // No overlap
+            (read_range, write_range)
+        } else {
+            // Overlap
+            let new_read_range = Range {
+                start: read_range.start,
+                len: write_range.start - read_range.start
+            };
+            // write range doesn't change
+            (new_read_range, write_range)
+        }
+    }
+
+    pub fn empty() -> Self {
+        Self { start: 0, len: 0 }
+    }
     pub fn new(start: usize, len: usize) -> Self {
         Self { start, len }
     }
@@ -29,6 +61,9 @@ impl Range {
             start: self.start,
             len: self.len + grow_by,
         }
+    }
+    pub fn start(&self) -> usize {
+        self.start
     }
     pub fn shrink(&self, shrink_by: usize) -> Self {
         Self {
@@ -146,6 +181,10 @@ impl Manager {
     /// a simple Ok(()) is returned to indicate that you can write to this.
     /// and shall not be returned.
     pub fn get_read_slice<'a>(&'a mut self, slice: &Range) -> Option<()> {
+        // An odd edge case where we don't actually need any data
+        if slice.is_empty() {
+            return Some(());
+        }
         // Check that this is contined inside an existing read range
         let read_ranges = self.read_ranges.borrow_mut();
         read_ranges
@@ -275,5 +314,21 @@ mod tests {
         assert!(manager.get_read_slice(&slice.shrink(5)).is_some());
         // Cannot get more
         assert!(manager.get_read_slice(&slice.grow(1)).is_none());
+    }
+
+    #[test]
+    fn test_overlapping() {
+        let read_range = Range::new_from_min_max_exclusive(0,5);
+        let write_range = Range::new_from_min_max_exclusive(6,10);
+        let (new_read,new_write) = Range::make_non_overlapping(read_range, write_range);
+        assert_eq!(read_range, new_read);
+        assert_eq!(write_range, new_write);
+
+        let read_range = Range::new_from_min_max_exclusive(0,6);
+        let write_range = Range::new_from_min_max_exclusive(6,10);
+        let (new_read,new_write) = Range::make_non_overlapping(read_range, write_range);
+        assert_ne!(read_range, new_read);
+        assert_eq!(new_read, Range::new_from_min_max_exclusive(0,5));
+        assert_eq!(write_range, new_write);
     }
 }
