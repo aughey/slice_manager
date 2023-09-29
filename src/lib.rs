@@ -201,6 +201,11 @@ impl Manager {
         let range = Self::extract_slice(&mut self.write_ranges.borrow_mut(), slice)?;
         Some(Lease::new(range, self))
     }
+    /// A self-managed checkout.  It's up to the caller to properly return this lease
+    pub fn check_out_write_slice_self_managed<'a>(&'a self, slice: Range) -> Option<Range> {
+        let range = Self::extract_slice(&mut self.write_ranges.borrow_mut(), slice)?;
+        Some(range)
+    }
 
     /// Given a set of ranges, find a range that fully contains the given range.
     /// Remove the hole from the ranges, and return the range that was contained.
@@ -251,7 +256,7 @@ impl Manager {
 
     /// Called by the leasee when the lease is dropped.  The range is returned
     /// to the manager and added to the read-only side of the available ranges.
-    fn return_range(&self, slice: &Range) {
+    pub fn return_range(&self, slice: &Range) {
         // Slices once returned become read only.
         Self::merge_range_with_ranges(&mut self.read_ranges.borrow_mut(), slice.to_owned());
     }
