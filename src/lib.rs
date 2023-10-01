@@ -136,6 +136,14 @@ impl Range {
             None
         }
     }
+
+    pub fn contains(&self, input_index: usize) -> bool {
+        if input_index >= self.start && input_index < self.start + self.len {
+            true
+        } else {
+            false
+        }
+    }
 }
 
 /// Manager controls a contiguous range of space.  The space begins with a
