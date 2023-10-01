@@ -145,6 +145,7 @@ impl Range {
 ///
 /// The returned lease range is then considered read-only and not writable
 /// again.  
+#[derive(Debug)]
 pub struct Manager {
     read_ranges: RefCell<Vec<Range>>,
     write_ranges: RefCell<Vec<Range>>,
