@@ -43,7 +43,7 @@ impl Range {
             // Overlap
             let new_read_range = Range {
                 start: read_range.start,
-                len: write_range.start - read_range.start
+                len: write_range.start - read_range.start,
             };
             // write range doesn't change
             (new_read_range, write_range)
@@ -332,17 +332,17 @@ mod tests {
 
     #[test]
     fn test_overlapping() {
-        let read_range = Range::new_from_min_max_exclusive(0,5);
-        let write_range = Range::new_from_min_max_exclusive(6,10);
-        let (new_read,new_write) = Range::make_non_overlapping(read_range, write_range);
+        let read_range = Range::new_from_min_max_exclusive(0, 5);
+        let write_range = Range::new_from_min_max_exclusive(6, 10);
+        let (new_read, new_write) = Range::make_non_overlapping(read_range, write_range);
         assert_eq!(read_range, new_read);
         assert_eq!(write_range, new_write);
 
-        let read_range = Range::new_from_min_max_exclusive(0,6);
-        let write_range = Range::new_from_min_max_exclusive(6,10);
-        let (new_read,new_write) = Range::make_non_overlapping(read_range, write_range);
+        let read_range = Range::new_from_min_max_exclusive(0, 6);
+        let write_range = Range::new_from_min_max_exclusive(6, 10);
+        let (new_read, new_write) = Range::make_non_overlapping(read_range, write_range);
         assert_ne!(read_range, new_read);
-        assert_eq!(new_read, Range::new_from_min_max_exclusive(0,5));
+        assert_eq!(new_read, Range::new_from_min_max_exclusive(0, 5));
         assert_eq!(write_range, new_write);
     }
 }
